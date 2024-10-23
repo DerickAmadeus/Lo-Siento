@@ -5,7 +5,8 @@ def receive_messages(client_socket):
     while True:
         try:
             # Receive messages from the server
-            message = client_socket.recv(1024).decode('utf-8')
+            message, _ = client_socket.recvfrom(1024)
+            message = message.decode('utf-8')
             if message:
                 print("\n" + message)
             else:
@@ -20,13 +21,9 @@ def start_client(server_ip='192.168.56.1', port=9998):
     client_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
     try:
-        # Connect to the server
-        client_socket.connect((server_ip, port))
-        print("Connected to the server!")
-
         # Get the client's name
         name = input("Enter your name: ").strip()
-        client_socket.send(name.encode('utf-8'))
+        client_socket.sendto(name.encode('utf-8'), (server_ip, port))
 
         # Start a thread to receive messages
         receive_thread = threading.Thread(target=receive_messages, args=(client_socket,))
@@ -39,15 +36,15 @@ def start_client(server_ip='192.168.56.1', port=9998):
             if message == '':
                 continue  # Ignore empty messages
             if message.lower() == 'quit':
-                client_socket.send('quit'.encode('utf-8'))
+                client_socket.sendto('quit'.encode('utf-8'), (server_ip, port))
                 break
             else:
-                client_socket.send(message.encode('utf-8'))
+                client_socket.sendto(message.encode('utf-8'), (server_ip, port))
 
     except socket.gaierror as e:
-        print(f"Address-related error connecting to server: {e}")
+        print(f"Address-related error: {e}")
     except socket.error as e:
-        print(f"Connection error: {e}")
+        print(f"Socket error: {e}")
     finally:
         client_socket.close()
         print("Connection closed.")
@@ -55,4 +52,3 @@ def start_client(server_ip='192.168.56.1', port=9998):
 # Run the client
 if __name__ == "__main__":
     start_client()
-
