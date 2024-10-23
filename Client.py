@@ -17,7 +17,7 @@ def receive_messages(client_socket):
             break
 
 def start_client(server_ip='192.168.56.1', port=9998):
-    client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    client_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
     try:
         # Connect to the server

@@ -53,7 +53,7 @@ def handle_client(client_socket, client_address):
 
 # Main server function
 def start_server(host='0.0.0.0', port=9998):
-    server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    server = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     server.bind((host, port))
     server.listen(5)
     print(f"Server started on {host}:{port}")
