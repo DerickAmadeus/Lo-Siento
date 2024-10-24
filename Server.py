@@ -4,6 +4,9 @@ import threading
 # Dictionary to store client addresses and their corresponding names
 clients = {}
 
+# Predefined password for the server
+server_password = "secret123"
+
 # Function to broadcast a message to all clients
 def broadcast(message, sender_address=None):
     for client_address in clients:
@@ -23,12 +26,20 @@ def remove_client(client_address):
 # Function to handle incoming messages
 def handle_client_message(message, client_address):
     if client_address not in clients:
-        # New client: add them to the dictionary
-        client_name = message
-        clients[client_address] = client_name
-        welcome_message = f"{client_name} has joined the chat!"
-        print(welcome_message)
-        broadcast(welcome_message, sender_address=client_address)
+        # New client: check for the password first
+        if message.startswith("PASS:"):
+            client_password = message[5:]
+            if client_password == server_password:
+                server_socket.sendto("PASS_OK".encode('utf-8'), client_address)
+            else:
+                server_socket.sendto("PASS_FAIL".encode('utf-8'), client_address)
+        else:
+            # Expect the client name if the password was correct
+            client_name = message
+            clients[client_address] = client_name
+            welcome_message = f"{client_name} has joined the chat!"
+            print(welcome_message)
+            broadcast(welcome_message, sender_address=client_address)
     else:
         # Existing client: process their message
         client_name = clients[client_address]

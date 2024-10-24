@@ -7,7 +7,11 @@ def receive_messages(client_socket):
             # Receive messages from the server
             message, _ = client_socket.recvfrom(1024)
             message = message.decode('utf-8')
-            if message:
+            if message == "PASS_OK":
+                print("Password accepted! You have joined the chat.")
+            elif message == "PASS_FAIL":
+                print("Password incorrect! Try again.")
+            elif message:
                 print("\n" + message)
             else:
                 # Server has closed the connection
@@ -21,7 +25,27 @@ def start_client(server_ip='192.168.56.1', port=9998):
     client_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
     try:
-        # Get the client's name
+        # Allow up to 3 attempts to input the correct password
+        max_attempts = 3
+        attempts = 0
+        while attempts < max_attempts:
+            password = input(f"Enter the server password (attempt {attempts+1}/{max_attempts}): ").strip()
+            client_socket.sendto(f"PASS:{password}".encode('utf-8'), (server_ip, port))
+
+            # Wait for password validation response
+            pass_response, _ = client_socket.recvfrom(1024)
+            if pass_response.decode('utf-8') == "PASS_OK":
+                break
+            else:
+                print("Incorrect password!")
+                attempts += 1
+
+            # If 3 attempts are used up, close the connection
+            if attempts == max_attempts:
+                print("Maximum attempts reached! Connection closed.")
+                return
+
+        # Get the client's name after password is accepted
         name = input("Enter your name: ").strip()
         client_socket.sendto(name.encode('utf-8'), (server_ip, port))
 
