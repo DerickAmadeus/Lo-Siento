@@ -3,6 +3,8 @@ import threading
 
 # Dictionary to store client addresses and their corresponding names
 clients = {}
+# Dictionary to keep track of name attempts for each client
+name_attempts = {}
 
 # Predefined password for the server
 server_password = "secret123"
@@ -12,16 +14,16 @@ def broadcast(message, sender_address=None):
     for client_address in clients:
         if client_address != sender_address:  # Do not send the message back to the sender
             try:
-                # Send the message to all clients except the sender
                 server_socket.sendto(message.encode('utf-8'), client_address)
             except socket.error:
-                # If sending fails, remove the client
                 remove_client(client_address)
 
 # Function to remove a client from the clients dictionary
 def remove_client(client_address):
     if client_address in clients:
         del clients[client_address]
+    if client_address in name_attempts:
+        del name_attempts[client_address]
 
 # Function to handle incoming messages
 def handle_client_message(message, client_address):
@@ -36,10 +38,26 @@ def handle_client_message(message, client_address):
         else:
             # Expect the client name if the password was correct
             client_name = message
-            clients[client_address] = client_name
-            welcome_message = f"{client_name} has joined the chat!"
-            print(welcome_message)
-            broadcast(welcome_message, sender_address=client_address)
+
+            # Initialize the name attempt count if not present
+            if client_address not in name_attempts:
+                name_attempts[client_address] = 0
+
+            if client_name in clients.values():
+                name_attempts[client_address] += 1
+
+                # Check if the client has used all 3 attempts
+                if name_attempts[client_address] >= 3:
+                    server_socket.sendto("NAME_TAKEN".encode('utf-8'), client_address)
+                    remove_client(client_address)
+                else:
+                    server_socket.sendto("NAME_TAKEN".encode('utf-8'), client_address)
+            else:
+                clients[client_address] = client_name
+                del name_attempts[client_address]  # Clear name attempts after successful entry
+                welcome_message = f"{client_name} has joined the chat!"
+                print(welcome_message)
+                broadcast(welcome_message, sender_address=client_address)
     else:
         # Existing client: process their message
         client_name = clients[client_address]
@@ -62,11 +80,8 @@ def start_server(host='0.0.0.0', port=9998):
 
     while True:
         try:
-            # Receive message from a client
             message, client_address = server_socket.recvfrom(1024)
             message = message.decode('utf-8')
-
-            # Handle the client's message in a separate thread
             client_thread = threading.Thread(target=handle_client_message, args=(message, client_address))
             client_thread.start()
         except socket.error as e:

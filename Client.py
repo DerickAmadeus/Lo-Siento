@@ -21,8 +21,11 @@ def receive_messages(client_socket):
             print("\nError receiving message.")
             break
 
-def start_client(server_ip='192.168.56.1', port=9998):
+def start_client():
     client_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    server_ip = input("Enter the server IP address (default: 192.168.56.1): ").strip() or '192.168.56.1'
+    port = input("Enter the server port (default: 9998): ").strip()
+    port = int(port) if port else 9998
 
     try:
         # Allow up to 3 attempts to input the correct password
