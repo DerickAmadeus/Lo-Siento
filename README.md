@@ -9,6 +9,12 @@ Beberapa fitur menarik yang dapat kami suguhkan adalah :
 4. Semangat yang membara
 
 
+Aplikasi utama berada pada 
+server : Server.py
+client : clientBaru.py
+
+sisanya merupakan kerangka awal yang sudah dikembangakn
+
 Aplikasi dijalankan menggunakan bantuan private server Hamachi untuk membantu menyambungkan kedua perangkat elektronik antara server dan client. 
 
 Sekian, silahkan dicoba !!!!
