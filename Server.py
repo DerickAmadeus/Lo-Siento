@@ -77,15 +77,15 @@ def handle_client_message(message, client_address):
             broadcast(full_message, sender_address=client_address)
 
 # Main server function
-def start_server(host='25.11.93.199', port=2620):
+def start_server(host='25.11.93.199', port=2620):  # Change the host and port as needed
     global server_socket
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     server_socket.bind((host, port))
     print(f"Server started on {host}:{port}")
 
-    # Initialize chat history file
-    with open(chat_history_file, "w") as file:
-        file.write("Chat History:\n")
+    # No need to initialize chat history file here; just append to it
+    # Initial message (optional)
+    save_to_history("Server started.")
 
     while True:
         try:
