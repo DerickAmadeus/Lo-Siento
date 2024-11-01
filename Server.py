@@ -77,7 +77,7 @@ def handle_client_message(message, client_address):
             broadcast(full_message, sender_address=client_address)
 
 # Main server function
-def start_server(host='0.0.0.0', port=9998):
+def start_server(host='192.168.56.1', port=9998):
     global server_socket
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     server_socket.bind((host, port))
