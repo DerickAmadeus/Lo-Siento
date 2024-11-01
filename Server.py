@@ -1,5 +1,6 @@
 import socket
 import threading
+from datetime import datetime
 
 # Dictionary to store client addresses and their corresponding names
 clients = {}
@@ -9,8 +10,18 @@ name_attempts = {}
 # Predefined password for the server
 server_password = "secret123"
 
+# Log file to store chat history
+chat_history_file = "chat.txt"
+
+# Function to write a message to the chat history file with a timestamp
+def save_to_history(message):
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    with open(chat_history_file, "a") as file:
+        file.write(f"[{timestamp}] {message}\n")
+
 # Function to broadcast a message to all clients
 def broadcast(message, sender_address=None):
+    save_to_history(message)  # Save message to chat history with timestamp
     for client_address in clients:
         if client_address != sender_address:  # Do not send the message back to the sender
             try:
@@ -44,17 +55,11 @@ def handle_client_message(message, client_address):
                 name_attempts[client_address] = 0
 
             if client_name in clients.values():
-                name_attempts[client_address] += 1
-
-                # Check if the client has used all 3 attempts
-                if name_attempts[client_address] >= 3:
-                    server_socket.sendto("NAME_TAKEN".encode('utf-8'), client_address)
-                    remove_client(client_address)
-                else:
-                    server_socket.sendto("NAME_TAKEN".encode('utf-8'), client_address)
+                server_socket.sendto("NAME_TAKEN".encode('utf-8'), client_address)
             else:
                 clients[client_address] = client_name
                 del name_attempts[client_address]  # Clear name attempts after successful entry
+                server_socket.sendto("NAME_OK".encode('utf-8'), client_address)  # Notify client that name is accepted
                 welcome_message = f"{client_name} has joined the chat!"
                 print(welcome_message)
                 broadcast(welcome_message, sender_address=client_address)
@@ -77,6 +82,10 @@ def start_server(host='0.0.0.0', port=9998):
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     server_socket.bind((host, port))
     print(f"Server started on {host}:{port}")
+
+    # Initialize chat history file
+    with open(chat_history_file, "w") as file:
+        file.write("Chat History:\n")
 
     while True:
         try:

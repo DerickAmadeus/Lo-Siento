@@ -1,4 +1,4 @@
-=import socket
+import socket
 import threading
 import tkinter as tk
 from tkinter import simpledialog, messagebox, scrolledtext
@@ -109,8 +109,17 @@ class ChatClient:
     def send_message(self, event=None):
         message = self.message_entry.get().strip()
         if message:
+            # Display the user's own message in the chat area
+            self.chat_area.config(state="normal")
+            self.chat_area.insert(tk.END, f"You: {message}\n")
+            self.chat_area.yview(tk.END)
+            self.chat_area.config(state="disabled")
+
+            # Send message to the server
             self.client_socket.sendto(message.encode('utf-8'), (self.server_ip, self.server_port))
             self.message_entry.delete(0, tk.END)
+
+            # If the user types 'quit', close the client
             if message.lower() == 'quit':
                 self.client_socket.close()
                 self.master.quit()
