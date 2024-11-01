@@ -12,7 +12,7 @@ class ChatClient:
         self.client_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         
         # Server information
-        self.server_ip = '25.11.93.199'
+        self.server_ip = '25.11.147.169'
         self.server_port = 2620
         
         # Main frames
