@@ -15,6 +15,9 @@ client : clientBaru.py
 
 sisanya merupakan kerangka awal yang sudah dikembangakn
 
+untuk tutorial run bisa dilihat disini : 
+https://youtu.be/GUz9V8q8Wuo?si=suUU12bf-37-h6nn
+
 Aplikasi dijalankan menggunakan bantuan private server Hamachi untuk membantu menyambungkan kedua perangkat elektronik antara server dan client. 
 
 Sekian, silahkan dicoba !!!!
