@@ -12,8 +12,8 @@ class ChatClient:
         self.client_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         
         # Server information
-        self.server_ip = '192.168.56.1'
-        self.server_port = 9998
+        self.server_ip = '25.11.93.199'
+        self.server_port = 2620
         
         # Main frames
         self.setup_ui()
@@ -22,12 +22,12 @@ class ChatClient:
         # Server IP and Port input
         tk.Label(self.master, text="Server IP:").grid(row=0, column=0, padx=5, pady=5)
         self.ip_entry = tk.Entry(self.master, width=20)
-        self.ip_entry.insert(0, '192.168.56.1')
+        self.ip_entry.insert(0, self.server_ip)
         self.ip_entry.grid(row=0, column=1, padx=5, pady=5)
 
         tk.Label(self.master, text="Port:").grid(row=0, column=2, padx=5, pady=5)
         self.port_entry = tk.Entry(self.master, width=10)
-        self.port_entry.insert(0, '9998')
+        self.port_entry.insert(0, self.server_port)
         self.port_entry.grid(row=0, column=3, padx=5, pady=5)
 
         # Message area
