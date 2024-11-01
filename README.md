@@ -1,5 +1,5 @@
-ElSient0 adalah chatting system yang dikembangkan oleh Derick Amadeus B dan Wilson
-Tujuan dari pembuatan apliaski chatting system ini untuk memenuhi tugas besar jarkom mengenai "Socket Programming"
+ElSient0 adalah chatting system yang dikembangkan oleh Derick Amadeus B dan Wilson.
+Tujuan dari pembuatan apliaski chatting system ini untuk memenuhi tugas besar jarkom mengenai "Socket Programming".
 
 
 Beberapa fitur menarik yang dapat kami suguhkan adalah : 
