@@ -1,121 +1,81 @@
-=import socket
+import socket
 import threading
-import tkinter as tk
-from tkinter import simpledialog, messagebox, scrolledtext
 
-class ChatClient:
-    def __init__(self, master):
-        self.master = master
-        self.master.title("UDP Chat Client")
+def receive_messages(client_socket):
+    while True:
+        try:
+            # Receive messages from the server
+            message, _ = client_socket.recvfrom(1024)
+            message = message.decode('utf-8')
+            if message == "PASS_OK":
+                print("Password accepted! You have joined the chat.")
+            elif message == "PASS_FAIL":
+                print("Password incorrect! Try again.")
+            elif message:
+                print("\n" + message)
+            else:
+                # Server has closed the connection
+                print("\nConnection closed by the server.")
+                break
+        except socket.error:
+            print("\nError receiving message.")
+            break
 
-        # Socket setup
-        self.client_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        
-        # Server information
-        self.server_ip = '192.168.56.1'
-        self.server_port = 9998
-        
-        # Main frames
-        self.setup_ui()
-        
-    def setup_ui(self):
-        # Server IP and Port input
-        tk.Label(self.master, text="Server IP:").grid(row=0, column=0, padx=5, pady=5)
-        self.ip_entry = tk.Entry(self.master, width=20)
-        self.ip_entry.insert(0, '192.168.56.1')
-        self.ip_entry.grid(row=0, column=1, padx=5, pady=5)
+def start_client():
+    client_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    server_ip = input("Enter the server IP address (default: 192.168.56.1): ").strip() or '192.168.56.1'
+    port = input("Enter the server port (default: 9998): ").strip()
+    port = int(port) if port else 9998
 
-        tk.Label(self.master, text="Port:").grid(row=0, column=2, padx=5, pady=5)
-        self.port_entry = tk.Entry(self.master, width=10)
-        self.port_entry.insert(0, '9998')
-        self.port_entry.grid(row=0, column=3, padx=5, pady=5)
-
-        # Message area
-        self.chat_area = scrolledtext.ScrolledText(self.master, wrap=tk.WORD, state="disabled", width=50, height=20)
-        self.chat_area.grid(row=1, column=0, columnspan=4, padx=5, pady=5)
-
-        # Message entry
-        self.message_entry = tk.Entry(self.master, width=40)
-        self.message_entry.grid(row=2, column=0, columnspan=3, padx=5, pady=5)
-        self.message_entry.bind("<Return>", self.send_message)
-
-        # Send button
-        send_button = tk.Button(self.master, text="Send", command=self.send_message)
-        send_button.grid(row=2, column=3, padx=5, pady=5)
-
-        # Connect button
-        connect_button = tk.Button(self.master, text="Connect", command=self.connect)
-        connect_button.grid(row=0, column=4, padx=5, pady=5)
-
-    def connect(self):
-        # Get IP and port
-        self.server_ip = self.ip_entry.get().strip()
-        self.server_port = int(self.port_entry.get().strip())
-        
-        # Password prompt
+    try:
+        # Allow up to 3 attempts to input the correct password
         max_attempts = 3
-        for attempt in range(max_attempts):
-            password = simpledialog.askstring("Password", f"Enter server password (attempt {attempt + 1}/{max_attempts}):", show='*')
-            if password is None:
-                return  # User canceled
+        attempts = 0
+        while attempts < max_attempts:
+            password = input(f"Enter the server password (attempt {attempts+1}/{max_attempts}): ").strip()
+            client_socket.sendto(f"PASS:{password}".encode('utf-8'), (server_ip, port))
 
-            self.client_socket.sendto(f"PASS:{password}".encode('utf-8'), (self.server_ip, self.server_port))
-            pass_response, _ = self.client_socket.recvfrom(1024)
+            # Wait for password validation response
+            pass_response, _ = client_socket.recvfrom(1024)
             if pass_response.decode('utf-8') == "PASS_OK":
                 break
-            elif attempt == max_attempts - 1:
-                messagebox.showerror("Error", "Maximum attempts reached! Connection closed.")
+            else:
+                print("Incorrect password!")
+                attempts += 1
+
+            # If 3 attempts are used up, close the connection
+            if attempts == max_attempts:
+                print("Maximum attempts reached! Connection closed.")
                 return
-            else:
-                messagebox.showerror("Error", "Incorrect password!")
 
-        # Name prompt
+        # Get the client's name after password is accepted
+        name = input("Enter your name: ").strip()
+        client_socket.sendto(name.encode('utf-8'), (server_ip, port))
+
+        # Start a thread to receive messages
+        receive_thread = threading.Thread(target=receive_messages, args=(client_socket,))
+        receive_thread.daemon = True
+        receive_thread.start()
+
+        # Send messages to the server
         while True:
-            name = simpledialog.askstring("Name", "Enter your name:")
-            if name is None:
-                return  # User canceled
-
-            self.client_socket.sendto(name.encode('utf-8'), (self.server_ip, self.server_port))
-            name_response, _ = self.client_socket.recvfrom(1024)
-            if name_response.decode('utf-8') == "NAME_OK":
-                self.chat_area.config(state="normal")
-                self.chat_area.insert(tk.END, f"Welcome, {name}!\n")
-                self.chat_area.config(state="disabled")
-                break
-            else:
-                messagebox.showerror("Error", "Name is already taken!")
-
-        # Start receiving messages in a thread
-        threading.Thread(target=self.receive_messages, daemon=True).start()
-
-    def receive_messages(self):
-        while True:
-            try:
-                message, _ = self.client_socket.recvfrom(1024)
-                message = message.decode('utf-8')
-                if message == "PASS_OK":
-                    pass  # Handled in connect
-                elif message == "PASS_FAIL":
-                    pass  # Handled in connect
-                else:
-                    self.chat_area.config(state="normal")
-                    self.chat_area.insert(tk.END, message + "\n")
-                    self.chat_area.yview(tk.END)
-                    self.chat_area.config(state="disabled")
-            except socket.error:
-                messagebox.showerror("Error", "Connection closed by the server.")
-                break
-
-    def send_message(self, event=None):
-        message = self.message_entry.get().strip()
-        if message:
-            self.client_socket.sendto(message.encode('utf-8'), (self.server_ip, self.server_port))
-            self.message_entry.delete(0, tk.END)
+            message = input().strip()
+            if message == '':
+                continue  # Ignore empty messages
             if message.lower() == 'quit':
-                self.client_socket.close()
-                self.master.quit()
+                client_socket.sendto('quit'.encode('utf-8'), (server_ip, port))
+                break
+            else:
+                client_socket.sendto(message.encode('utf-8'), (server_ip, port))
 
+    except socket.gaierror as e:
+        print(f"Address-related error: {e}")
+    except socket.error as e:
+        print(f"Socket error: {e}")
+    finally:
+        client_socket.close()
+        print("Connection closed.")
+
+# Run the client
 if __name__ == "__main__":
-    root = tk.Tk()
-    client = ChatClient(root)
-    root.mainloop()
+    start_client()
